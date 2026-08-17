@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { siteConfig } from "@/lib/site-config"
+import { AddressAutocomplete, EMPTY_ADDRESS, type AddressValue } from "@/components/site/address-autocomplete"
 import {
   contactMethodOptions,
   fleetSizeOptions,
@@ -29,6 +30,7 @@ export function FleetConsultationForm() {
   const [errorMsg, setErrorMsg] = useState("")
   const [errors, setErrors] = useState<FleetErrors>({})
   const [smsConsent, setSmsConsent] = useState(false)
+  const [address, setAddress] = useState<AddressValue>(EMPTY_ADDRESS)
   const meta = useLeadMeta()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -86,6 +88,16 @@ export function FleetConsultationForm() {
           preferredDate,
           preferredContact,
           concern: notes,
+          // Structured service-location address from Google Places.
+          address: address.formatted,
+          addressStreet: address.street,
+          addressCity: address.city,
+          addressState: address.state,
+          addressPostalCode: address.postalCode,
+          addressCountry: address.country,
+          addressLat: address.lat,
+          addressLng: address.lng,
+          addressPlaceId: address.placeId,
           smsConsent,
           ...meta,
         }),
@@ -97,6 +109,7 @@ export function FleetConsultationForm() {
       setStatus("success")
       form.reset()
       setSmsConsent(false)
+      setAddress(EMPTY_ADDRESS)
     } catch (err) {
       setStatus("error")
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.")
@@ -240,6 +253,20 @@ export function FleetConsultationForm() {
           ))}
         </div>
       </fieldset>
+
+      {/* Service location with Google Places autocomplete + confirmation map */}
+      <div className="mt-5">
+        <AddressAutocomplete
+          label="Service location"
+          onChange={setAddress}
+          country="us"
+          placeholder="Where are the vehicles based? Start typing an address..."
+          showMap
+        />
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Helps us plan pickup/drop-off and on-site logistics. Select a suggestion to confirm the location on the map.
+        </p>
+      </div>
 
       <div className="mt-4">
         <Field label="Preferred start date" htmlFor="fcf-date">

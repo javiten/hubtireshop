@@ -61,6 +61,11 @@ export async function POST(request: NextRequest) {
       vehicleTypes,
       fuelType,
       servicesNeeded,
+      // Service-location address (Google Places autocomplete).
+      address,
+      addressLat,
+      addressLng,
+      addressPlaceId,
       sourcePage,
       referrer,
       utmSource,
@@ -92,6 +97,20 @@ export async function POST(request: NextRequest) {
     // Multi-select fields may arrive as arrays.
     const vehicleTypesStr = Array.isArray(vehicleTypes) ? vehicleTypes.join(", ") : vehicleTypes || ""
     const servicesNeededStr = Array.isArray(servicesNeeded) ? servicesNeeded.join(", ") : servicesNeeded || ""
+
+    // Service-location address + a clickable Google Maps link for the team.
+    const addressStr = String(address ?? "").trim()
+    const hasCoords =
+      addressLat != null && addressLng != null && addressLat !== "" && addressLng !== ""
+    const mapsUrl = addressPlaceId
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          addressStr,
+        )}&query_place_id=${encodeURIComponent(String(addressPlaceId))}`
+      : hasCoords
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${addressLat},${addressLng}`)}`
+        : addressStr
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressStr)}`
+          : ""
 
     // Build the notification email.
     const subjectService = serviceType ? ` — ${serviceType}` : ""
@@ -133,6 +152,18 @@ export async function POST(request: NextRequest) {
             ${row("Vehicle types", vehicleTypesStr)}
             ${row("Fuel type", fuelType)}
             ${row("Services needed", servicesNeededStr)}
+            ${
+              addressStr
+                ? `<tr>
+                    <td style="padding:6px 12px;font-weight:600;color:#111;white-space:nowrap;vertical-align:top;">Service location</td>
+                    <td style="padding:6px 12px;color:#333;">${esc(addressStr)}${
+                      mapsUrl
+                        ? `<br/><a href="${esc(mapsUrl)}" style="color:#f97316;font-weight:600;">View on Google Maps</a>`
+                        : ""
+                    }</td>
+                  </tr>`
+                : ""
+            }
             ${row("Service type", serviceType)}
             ${row("Vehicle", vehicle)}
             ${row("Mileage", mileage)}
@@ -182,6 +213,8 @@ export async function POST(request: NextRequest) {
       vehicleTypesStr && `Vehicle types: ${vehicleTypesStr}`,
       fuelType && `Fuel type: ${fuelType}`,
       servicesNeededStr && `Services needed: ${servicesNeededStr}`,
+      addressStr && `Service location: ${addressStr}`,
+      addressStr && mapsUrl && `Map: ${mapsUrl}`,
       serviceType && `Service type: ${serviceType}`,
       vehicle && `Vehicle: ${vehicle}`,
       mileage && `Mileage: ${mileage}`,
