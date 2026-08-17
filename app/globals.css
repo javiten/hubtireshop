@@ -227,3 +227,23 @@
   --input: oklch(0.25 0 0);
   --ring: oklch(0.72 0.18 55);
 }
+
+/* Google PlaceAutocompleteElement — blend the web component into the form. */
+.gmp-address-host {
+  overflow: hidden;
+}
+.gmp-address-host gmp-place-autocomplete {
+  --gmpx-color-surface: var(--background);
+  --gmpx-color-on-surface: var(--foreground);
+  width: 100%;
+  display: block;
+}
+.gmp-address-host gmp-place-autocomplete::part(input) {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  outline: none;
+}
